@@ -1,94 +1,97 @@
 package com.uw.TrainerWorkloadService.controller;
 
 import com.uw.TrainerWorkloadService.dto.TrainingRequest;
-import com.uw.TrainerWorkloadService.model.Month;
-import com.uw.TrainerWorkloadService.model.TrainerWorkload;
-import com.uw.TrainerWorkloadService.model.YearSummary;
+import com.uw.TrainerWorkloadService.service.TrainerWorkloadManagementService;
 import com.uw.TrainerWorkloadService.service.TrainerWorkloadService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
+/**
+ * REST controller for managing trainer workloads.
+ */
 @RestController
 @RequestMapping("/trainer-workload")
 public class TrainerWorkloadController {
 
+      private final TrainerWorkloadManagementService trainerWorkloadManagementService;
       private final TrainerWorkloadService trainerWorkloadService;
 
+      /**
+       * Constructor for TrainerWorkloadController.
+       *
+       * @param trainerWorkloadManagementService the service for managing trainer workloads
+       * @param trainerWorkloadService the service for retrieving trainer workloads
+       */
       @Autowired
-      public TrainerWorkloadController ( TrainerWorkloadService trainerWorkloadService ) {
+      public TrainerWorkloadController(TrainerWorkloadManagementService trainerWorkloadManagementService, TrainerWorkloadService trainerWorkloadService) {
+            this.trainerWorkloadManagementService = trainerWorkloadManagementService;
             this.trainerWorkloadService = trainerWorkloadService;
       }
 
+      /**
+       * Handles training requests to add or delete training sessions.
+       *
+       * @param trainingRequest the training request object containing details of the training session
+       * @return a ResponseEntity with the result of the operation
+       */
       @PostMapping("/training-request")
       public ResponseEntity<?> trainingRequest(@RequestBody TrainingRequest trainingRequest) {
+            // Validate the training request object to ensure that it is not null
             if (trainingRequest == null) {
                   return ResponseEntity.badRequest().body("{\"message\": \"Invalid training request\"}");
             }
-            TrainerWorkload trainerWorkload;
-            if (trainerWorkloadService.getTrainerWorkloadByUsername(trainingRequest.getUsername()).isPresent()) {
-                  trainerWorkload = trainerWorkloadService.getTrainerWorkloadByUsername(trainingRequest.getUsername()).get();
-            } else {
-                  trainerWorkload = new TrainerWorkload();
-                  trainerWorkload.setTrainerUsername(trainingRequest.getUsername());
-                  trainerWorkload.setTrainerFirstName(trainingRequest.getFirstName());
-                  trainerWorkload.setTrainerLastName(trainingRequest.getLastName());
-                  trainerWorkload.setTrainerStatus(trainingRequest.isActive());
-            }
-
-            int year = trainingRequest.getTrainingDate().getYear();
-            Month month = Month.fromNumber(trainingRequest.getTrainingDate().getMonthValue());
-
-            if (trainingRequest.getActionType().equalsIgnoreCase("add")) {
-                  // Add training
-                  for (YearSummary y : trainerWorkload.getYears()) {
-                        if (y.getYear() == year) {
-                              y.addHours(month, trainingRequest.getTrainingDuration());
-                              trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-                              return ResponseEntity.ok().body("{\"message\": \"Training added successfully\"}");
-                        }
+            try {
+                  // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService
+                  String message;
+                  if ("add".equalsIgnoreCase(trainingRequest.getActionType())) {
+                        message = trainerWorkloadManagementService.addTraining(
+                                trainingRequest.getUsername(),
+                                trainingRequest.getFirstName(),
+                                trainingRequest.getLastName(),
+                                trainingRequest.isActive(),
+                                trainingRequest.getTrainingDate().getYear(),
+                                trainingRequest.getTrainingDate().getMonthValue(),
+                                trainingRequest.getTrainingDuration()
+                        );
+                  } else if ("delete".equalsIgnoreCase(trainingRequest.getActionType())) {
+                        message = trainerWorkloadManagementService.deleteTraining(
+                                trainingRequest.getUsername(),
+                                trainingRequest.getTrainingDate().getYear(),
+                                trainingRequest.getTrainingDate().getMonthValue(),
+                                trainingRequest.getTrainingDuration()
+                        );
+                  } else {
+                        return ResponseEntity.badRequest().body("{\"message\": \"Invalid action type\"}");
                   }
-                  YearSummary yearSummary = new YearSummary();
-                  yearSummary.setYear(year);
-                  yearSummary.addHours(month, trainingRequest.getTrainingDuration());
-                  trainerWorkload.getYears().add(yearSummary);
-                  trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-                  return ResponseEntity.ok().body("{\"message\": \"Training added successfully\"}");
-
-            } else if (trainingRequest.getActionType().equalsIgnoreCase("delete")) {
-                  // Delete training
-                  for (YearSummary y : trainerWorkload.getYears()) {
-                        if (y.getYear() == year) {
-                              y.deleteHours(month, trainingRequest.getTrainingDuration());
-                              trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-                              return ResponseEntity.ok().body("{\"message\": \"Training deleted successfully\"}");
-                        }
-                  }
-                  return ResponseEntity.badRequest().body("{\"message\": \"Training not found\"}");
-            } else {
-                  return ResponseEntity.badRequest().body("{\"message\": \"Invalid action type\"}");
+                  return ResponseEntity.ok().body("{\"message\": \"" + message + "\"}");
+            } catch (IllegalArgumentException e) {
+                  return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
             }
       }
 
+      /**
+       * Retrieves the monthly training hours for a specific trainer.
+       *
+       * @param username the username of the trainer
+       * @param year the year for which to retrieve the hours
+       * @param month the month for which to retrieve the hours
+       * @return a ResponseEntity with the number of hours or an error message if the trainer is not found
+       */
       @GetMapping("/{username}/{year}/{month}")
       public ResponseEntity<?> getMonthlyHours(
               @PathVariable(name = "username") String username,
               @PathVariable(name = "year") int year,
               @PathVariable(name = "month") int month) {
-            Optional<TrainerWorkload> trainerWorkloadOptional = trainerWorkloadService.getTrainerWorkloadByUsername(username);
-            if (trainerWorkloadOptional.isEmpty()) {
-                  return ResponseEntity.ok().body("{\"hours\": 0}");
+
+            if (trainerWorkloadService.getTrainerWorkloadByUsername(username).isEmpty()) {
+                  // 404 Not Found if the trainer does not exist. message: "User not found"
+                  return new ResponseEntity<>("{\"message\": \"User not found\"}", HttpStatus.NOT_FOUND);
             }
-            TrainerWorkload trainerWorkload = trainerWorkloadOptional.get();
-            for (YearSummary y : trainerWorkload.getYears()) {
-                  if (y.getYear() == year) {
-                        int hours = y.getHours(Month.fromNumber(month));
-                        return ResponseEntity.ok().body("{\"hours\": " + hours + "}");
-                  }
-            }
-            return ResponseEntity.ok().body("{\"hours\": 0}");
+
+            int hours = trainerWorkloadManagementService.getMonthlyHours(username, year, month);
+            return ResponseEntity.ok().body("{\"hours\": " + hours + "}");
       }
 
 }
