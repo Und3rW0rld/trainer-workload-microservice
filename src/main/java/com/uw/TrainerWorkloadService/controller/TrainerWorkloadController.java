@@ -42,33 +42,8 @@ public class TrainerWorkloadController {
             if (trainingRequest == null) {
                   return ResponseEntity.badRequest().body("{\"message\": \"Invalid training request\"}");
             }
-            try {
-                  // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService
-                  String message;
-                  if ("add".equalsIgnoreCase(trainingRequest.getActionType())) {
-                        message = trainerWorkloadManagementService.addTraining(
-                                trainingRequest.getUsername(),
-                                trainingRequest.getFirstName(),
-                                trainingRequest.getLastName(),
-                                trainingRequest.isActive(),
-                                trainingRequest.getTrainingDate().getYear(),
-                                trainingRequest.getTrainingDate().getMonthValue(),
-                                trainingRequest.getTrainingDuration()
-                        );
-                  } else if ("delete".equalsIgnoreCase(trainingRequest.getActionType())) {
-                        message = trainerWorkloadManagementService.deleteTraining(
-                                trainingRequest.getUsername(),
-                                trainingRequest.getTrainingDate().getYear(),
-                                trainingRequest.getTrainingDate().getMonthValue(),
-                                trainingRequest.getTrainingDuration()
-                        );
-                  } else {
-                        return ResponseEntity.badRequest().body("{\"message\": \"Invalid action type\"}");
-                  }
-                  return ResponseEntity.ok().body("{\"message\": \"" + message + "\"}");
-            } catch (IllegalArgumentException e) {
-                  return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
-            }
+            return trainerWorkloadManagementService.processRequest(trainingRequest);
+
       }
 
       /**

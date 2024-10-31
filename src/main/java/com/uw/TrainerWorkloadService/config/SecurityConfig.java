@@ -20,17 +20,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.List;
 
+/**
+ * Security configuration class for the Trainer Workload Service.
+ * Configures JWT authentication, CORS, and other security settings.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
       private final JwtRequestFilter jwtRequestFilter;
 
+      /**
+       * Constructor to inject JwtRequestFilter.
+       *
+       * @param jwtRequestFilter the JWT request filter
+       */
       @Autowired
       public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
             this.jwtRequestFilter = jwtRequestFilter;
       }
 
+      /**
+       * Configures the security filter chain.
+       *
+       * @param http the HttpSecurity object to configure
+       * @return the configured SecurityFilterChain
+       * @throws Exception if an error occurs during configuration
+       */
       @Bean
       public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             http
@@ -46,10 +62,15 @@ public class SecurityConfig {
             return http.build();
       }
 
+      /**
+       * Configures CORS settings.
+       *
+       * @return the configured CorsConfigurationSource
+       */
       @Bean
       public CorsConfigurationSource corsConfigurationSource() {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Adjust the URL as needed
+            configuration.setAllowedOrigins(List.of("*")); // Adjust the URL as needed
             configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
             configuration.setAllowCredentials(true);
             configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
@@ -59,11 +80,23 @@ public class SecurityConfig {
             return source;
       }
 
+      /**
+       * Configures the password encoder.
+       *
+       * @return the password encoder
+       */
       @Bean
       public PasswordEncoder passwordEncoder() {
             return new BCryptPasswordEncoder();
       }
 
+      /**
+       * Configures the authentication manager.
+       *
+       * @param authenticationConfiguration the authentication configuration
+       * @return the authentication manager
+       * @throws Exception if an error occurs during configuration
+       */
       @Bean
       public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
             return authenticationConfiguration.getAuthenticationManager();

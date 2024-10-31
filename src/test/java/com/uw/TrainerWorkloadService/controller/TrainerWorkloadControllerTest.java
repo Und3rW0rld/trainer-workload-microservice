@@ -49,7 +49,7 @@ class TrainerWorkloadControllerTest {
       @BeforeEach
       void setup() {
             trainingRequest = new TrainingRequest();
-            trainingRequest.setUsername(TEST_USERNAME);
+            trainingRequest.setTrainerUsername(TEST_USERNAME);
             trainingRequest.setFirstName("Test");
             trainingRequest.setLastName("User");
             trainingRequest.setActive(true);
@@ -64,9 +64,12 @@ class TrainerWorkloadControllerTest {
       void trainingRequest_InvalidActionType_ReturnsBadRequest() {
             trainingRequest.setActionType("invalid");
 
+            when(trainerWorkloadManagementService.processRequest(trainingRequest))
+                    .thenReturn(ResponseEntity.badRequest().body("{\"message\": \"Invalid action type\"}"));
+
             ResponseEntity<?> response = trainerWorkloadController.trainingRequest(trainingRequest);
 
-            assertEquals(400, response.getStatusCodeValue());
+            assertEquals(400, response.getStatusCode().value());
             assertEquals("{\"message\": \"Invalid action type\"}", response.getBody());
       }
 
@@ -122,15 +125,8 @@ class TrainerWorkloadControllerTest {
       void trainingRequest_AddTraining_ReturnsSuccessMessage() {
             trainingRequest.setActionType("add");
 
-            when(trainerWorkloadManagementService.addTraining(
-                    trainingRequest.getUsername(),
-                    trainingRequest.getFirstName(),
-                    trainingRequest.getLastName(),
-                    trainingRequest.isActive(),
-                    trainingRequest.getTrainingDate().getYear(),
-                    trainingRequest.getTrainingDate().getMonthValue(),
-                    trainingRequest.getTrainingDuration()
-            )).thenReturn("Training added successfully");
+            when(trainerWorkloadManagementService.processRequest(trainingRequest))
+                    .thenReturn(ResponseEntity.ok().body("{\"message\": \"Training added successfully\"}"));
 
             ResponseEntity<?> response = trainerWorkloadController.trainingRequest(trainingRequest);
 
@@ -145,12 +141,8 @@ class TrainerWorkloadControllerTest {
       void trainingRequest_DeleteTraining_ReturnsSuccessMessage() {
             trainingRequest.setActionType("delete");
 
-            when(trainerWorkloadManagementService.deleteTraining(
-                    trainingRequest.getUsername(),
-                    trainingRequest.getTrainingDate().getYear(),
-                    trainingRequest.getTrainingDate().getMonthValue(),
-                    trainingRequest.getTrainingDuration()
-            )).thenReturn("Training deleted successfully");
+            when(trainerWorkloadManagementService.processRequest(trainingRequest))
+                    .thenReturn(ResponseEntity.ok().body("{\"message\": \"Training deleted successfully\"}"));
 
             ResponseEntity<?> response = trainerWorkloadController.trainingRequest(trainingRequest);
 
