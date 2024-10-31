@@ -18,7 +18,7 @@ public class TrainingRequest {
     /**
      * The username of the trainer.
      */
-    private String username;
+    private String trainerUsername;
 
     /**
      * The first name of the trainer.

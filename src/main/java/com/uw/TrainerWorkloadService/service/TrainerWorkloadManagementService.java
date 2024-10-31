@@ -1,9 +1,11 @@
 package com.uw.TrainerWorkloadService.service;
 
+import com.uw.TrainerWorkloadService.dto.TrainingRequest;
 import com.uw.TrainerWorkloadService.model.Month;
 import com.uw.TrainerWorkloadService.model.TrainerWorkload;
 import com.uw.TrainerWorkloadService.model.YearSummary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -63,6 +65,36 @@ public class TrainerWorkloadManagementService {
       }
 
       /**
+       * Adds training hours to a trainer's workload.
+       * If the trainer or year summary does not exist, they are created.
+       *
+       * @param trainingRequest the training request data transfer object
+       * @return a message indicating the result of the operation
+       */
+
+      public String addTraining (TrainingRequest trainingRequest ) {
+            TrainerWorkload trainerWorkload = getOrCreateTrainerWorkload(trainingRequest.getTrainerUsername(), trainingRequest.getFirstName(), trainingRequest.getLastName(), trainingRequest.isActive());
+            Month monthEnum = Month.fromNumber(trainingRequest.getTrainingDate().getMonthValue());
+
+            for (YearSummary y : trainerWorkload.getYears()) {
+                  if (y.getYear() == trainingRequest.getTrainingDate().getYear()) {
+                        y.addHours(monthEnum, trainingRequest.getTrainingDuration());
+                        trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
+                        return "Training workload added successfully";
+                  }
+            }
+
+            YearSummary yearSummary = new YearSummary();
+            yearSummary.setYear(trainingRequest.getTrainingDate().getYear());
+            yearSummary.addHours(monthEnum, trainingRequest.getTrainingDuration());
+            trainerWorkload.getYears().add(yearSummary);
+            trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
+
+            return "Training workload added successfully";
+
+      }
+
+      /**
        * Deletes training hours from a trainer's workload.
        * If the training session is not found, an IllegalArgumentException is thrown.
        *
@@ -82,7 +114,31 @@ public class TrainerWorkloadManagementService {
                   if (y.getYear() == year) {
                         y.deleteHours(monthEnum, duration);
                         trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-                        return "Training deleted successfully";
+                        return "Training workload deleted successfully";
+                  }
+            }
+
+            throw new IllegalArgumentException("Training not found");
+      }
+
+      /**
+       * Deletes training hours from a trainer's workload.
+       * If the training session is not found, an IllegalArgumentException is thrown.
+       *
+       * @param trainingRequest the training request data transfer object
+       * @return a message indicating the result of the operation
+       * @throws IllegalArgumentException if the training session is not found
+       */
+      public String deleteTraining(TrainingRequest trainingRequest) {
+            TrainerWorkload trainerWorkload = trainerWorkloadService.getTrainerWorkloadByUsername(trainingRequest.getTrainerUsername())
+                    .orElseThrow(() -> new IllegalArgumentException("Training not found"));
+            Month monthEnum = Month.fromNumber(trainingRequest.getTrainingDate().getMonthValue());
+
+            for (YearSummary y : trainerWorkload.getYears()) {
+                  if (y.getYear() == trainingRequest.getTrainingDate().getYear()) {
+                        y.deleteHours(monthEnum, trainingRequest.getTrainingDuration());
+                        trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
+                        return "Training workload deleted successfully";
                   }
             }
 
@@ -137,5 +193,42 @@ public class TrainerWorkloadManagementService {
             }
 
             return 0;
+      }
+
+      /**
+       * Processes a training request and returns a response entity.
+       * The request is validated and the appropriate method is called based on the action type.
+       *
+       * @param trainingRequest the training request data transfer object
+       * @return a response entity containing a message indicating the result of the operation
+       */
+      public ResponseEntity<String> processRequest(TrainingRequest trainingRequest) {
+            try {
+                  // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService
+                  String message;
+                  if ("add".equalsIgnoreCase(trainingRequest.getActionType())) {
+                        message = addTraining(
+                                trainingRequest.getTrainerUsername(),
+                                trainingRequest.getFirstName(),
+                                trainingRequest.getLastName(),
+                                trainingRequest.isActive(),
+                                trainingRequest.getTrainingDate().getYear(),
+                                trainingRequest.getTrainingDate().getMonthValue(),
+                                trainingRequest.getTrainingDuration()
+                        );
+                  } else if ("delete".equalsIgnoreCase(trainingRequest.getActionType())) {
+                        message = deleteTraining(
+                                trainingRequest.getTrainerUsername(),
+                                trainingRequest.getTrainingDate().getYear(),
+                                trainingRequest.getTrainingDate().getMonthValue(),
+                                trainingRequest.getTrainingDuration()
+                        );
+                  } else {
+                        return ResponseEntity.badRequest().body("{\"message\": \"Invalid action type\"}");
+                  }
+                  return ResponseEntity.ok().body("{\"message\": \"" + message + "\"}");
+            } catch (IllegalArgumentException e) {
+                  return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
+            }
       }
 }
