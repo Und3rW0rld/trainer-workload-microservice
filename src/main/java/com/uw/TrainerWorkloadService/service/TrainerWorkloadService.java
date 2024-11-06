@@ -2,6 +2,8 @@ package com.uw.TrainerWorkloadService.service;
 
 import com.uw.TrainerWorkloadService.model.TrainerWorkload;
 import com.uw.TrainerWorkloadService.repository.TrainerWorkloadRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import java.util.Optional;
  */
 @Service
 public class TrainerWorkloadService {
+    private static final Logger logger = LoggerFactory.getLogger(TrainerWorkloadService.class);
     private final TrainerWorkloadRepository trainerWorkloadRepository;
 
     /**
@@ -33,6 +36,7 @@ public class TrainerWorkloadService {
      * @return the saved TrainerWorkload entity
      */
     public TrainerWorkload saveTrainerWorkload(TrainerWorkload trainerWorkload) {
+        logger.info("Saving TrainerWorkload: {}", trainerWorkload);
         return trainerWorkloadRepository.save(trainerWorkload);
     }
 
@@ -42,6 +46,7 @@ public class TrainerWorkloadService {
      * @return an Optional containing a list of all TrainerWorkload entities
      */
     public Optional<List<TrainerWorkload>> getAllTrainerWorkloads() {
+        logger.info("Retrieving all TrainerWorkloads");
         return Optional.of(trainerWorkloadRepository.findAll());
     }
 
@@ -52,6 +57,7 @@ public class TrainerWorkloadService {
      * @return an Optional containing the TrainerWorkload entity if found
      */
     public Optional<TrainerWorkload> getTrainerWorkloadById(long id) {
+        logger.info("Retrieving TrainerWorkload by ID: {}", id);
         return trainerWorkloadRepository.findById(id);
     }
 
@@ -61,6 +67,7 @@ public class TrainerWorkloadService {
      * @param id the ID of the TrainerWorkload entity to delete
      */
     public void deleteTrainerWorkload(long id) {
+        logger.info("Deleting TrainerWorkload by ID: {}", id);
         trainerWorkloadRepository.deleteById(id);
     }
 
@@ -71,6 +78,7 @@ public class TrainerWorkloadService {
      * @return an Optional containing the TrainerWorkload entity if found
      */
     public Optional<TrainerWorkload> getTrainerWorkloadByUsername(String username) {
+        logger.info("Retrieving TrainerWorkload by username: {}", username);
         return trainerWorkloadRepository.findByTrainerUsername(username);
     }
 }
