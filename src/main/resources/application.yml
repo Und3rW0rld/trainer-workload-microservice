@@ -1,32 +1,24 @@
-
 spring:
+    application:
+        name: trainer-workload-service
+    data:
+        mongodb:
+            uri: mongodb://localhost:27017/trainer-workload-db  # URL de conexión a MongoDB
+            database: trainer-workload-db  # Nombre de la base de datos
     activemq:
         broker-url: tcp://localhost:61616
         user: admin
         password: admin
-    application:
-        name: trainer-workload-service
-    datasource:
-        url: jdbc:h2:mem:testdb
-        driver-class-name: org.h2.Driver
-        username: sa
-        password:
-    h2:
-        console:
-            enabled: true
-            path: /h2-console
-    jpa:
-        hibernate:
-            ddl-auto: update
-        show-sql: true
 
 server:
     port: 0
+
 eureka:
     client:
         serviceUrl:
             defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
     instance:
         preferIpAddress: true
+
 jwt:
     secret: signatureSecret183827374628384628274628364627836482738

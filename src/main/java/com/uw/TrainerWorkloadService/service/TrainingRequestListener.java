@@ -17,19 +17,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class TrainingRequestListener {
 
-      private final TrainerWorkloadManagementService trainerWorkloadManagementService;
+      Logger logger = LoggerFactory.getLogger(TrainingRequestListener.class);
 
+      private final TrainerWorkloadManagementService trainerWorkloadManagementService;
+      private final ObjectMapper objectMapper;
       /**
        * Constructor to inject TrainerWorkloadManagementService.
        *
        * @param trainerWorkloadManagementService the service to manage trainer workload
        */
       @Autowired
-      public TrainingRequestListener(TrainerWorkloadManagementService trainerWorkloadManagementService) {
+      public TrainingRequestListener(TrainerWorkloadManagementService trainerWorkloadManagementService, ObjectMapper objectMapper) {
             this.trainerWorkloadManagementService = trainerWorkloadManagementService;
+            this.objectMapper = objectMapper;
       }
-
-      Logger logger = LoggerFactory.getLogger(TrainingRequestListener.class);
 
       /**
        * Method to receive and process messages from the "training.queue".
@@ -40,8 +41,6 @@ public class TrainingRequestListener {
       public void receiveMessage(String message) {
             logger.info("Received message: {}", message);
             try {
-                  ObjectMapper objectMapper = new ObjectMapper();
-                  objectMapper.registerModule(new JavaTimeModule());
                   TrainingRequest trainingRequest = objectMapper.readValue(message, TrainingRequest.class);
                   if (trainingRequest.getActionType().equalsIgnoreCase("add")) {
                         logger.info("Adding training request: {}", trainingRequest);
