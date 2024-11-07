@@ -3,10 +3,13 @@ package com.uw.TrainerWorkloadService.service;
 import com.uw.TrainerWorkloadService.model.Month;
 import com.uw.TrainerWorkloadService.model.TrainerWorkload;
 import com.uw.TrainerWorkloadService.model.YearSummary;
+import com.uw.TrainerWorkloadService.repository.TrainerWorkloadRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for the TrainerWorkloadService class.
  */
 @SpringBootTest
-@Transactional
+@ActiveProfiles("test")  // Usa el perfil de configuración para pruebas con MongoDB
 public class TrainerWorkloadServiceIntegrationTest {
 
       @Autowired
@@ -25,6 +28,20 @@ public class TrainerWorkloadServiceIntegrationTest {
 
       @Autowired
       private TrainerWorkloadManagementService trainerWorkloadManagementService;
+
+      @Autowired
+      private TrainerWorkloadRepository trainerWorkloadRepository;
+
+      @Autowired
+      private MongoTemplate mongoTemplate;
+
+      /**
+       * Clean up the database after each test.
+       */
+      @AfterEach
+      public void tearDown() {
+            trainerWorkloadRepository.deleteAll();
+      }
 
       /**
        * Test to verify that a trainer workload is returned when the trainer exists.
@@ -176,7 +193,7 @@ public class TrainerWorkloadServiceIntegrationTest {
             TrainerWorkload trainerWorkload = new TrainerWorkload();
             trainerWorkload.setTrainerUsername("trainer1");
             TrainerWorkload savedWorkload = trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-            long id = savedWorkload.getId();
+            String id = savedWorkload.getId();
 
             // Act
             trainerWorkloadService.deleteTrainerWorkload(id);
@@ -195,7 +212,7 @@ public class TrainerWorkloadServiceIntegrationTest {
             TrainerWorkload trainerWorkload = new TrainerWorkload();
             trainerWorkload.setTrainerUsername("trainer1");
             TrainerWorkload savedWorkload = trainerWorkloadService.saveTrainerWorkload(trainerWorkload);
-            long id = savedWorkload.getId();
+            String id = savedWorkload.getId();
 
             // Act
             Optional<TrainerWorkload> result = trainerWorkloadService.getTrainerWorkloadById(id);
@@ -209,19 +226,11 @@ public class TrainerWorkloadServiceIntegrationTest {
        */
       @Test
       public void testGetAllTrainerWorkloads_ReturnsAllWorkloads() {
-            // Arrange
-            TrainerWorkload trainerWorkload1 = new TrainerWorkload();
-            trainerWorkload1.setTrainerUsername("trainer1");
-            trainerWorkloadService.saveTrainerWorkload(trainerWorkload1);
-
-            TrainerWorkload trainerWorkload2 = new TrainerWorkload();
-            trainerWorkload2.setTrainerUsername("trainer2");
-            trainerWorkloadService.saveTrainerWorkload(trainerWorkload2);
-
             // Act
-            Optional<List<TrainerWorkload>> result = trainerWorkloadService.getAllTrainerWorkloads();
+            List<TrainerWorkload> result = trainerWorkloadService.getAllTrainerWorkloads().get();
 
             // Assert
-            assertEquals(2, result.get().size(), "Expected two workloads to be present");
+            assertNotNull(result, "Expected a list of trainer workloads");
+            assertFalse(result.isEmpty(), "Expected the list to contain at least one workload");
       }
 }

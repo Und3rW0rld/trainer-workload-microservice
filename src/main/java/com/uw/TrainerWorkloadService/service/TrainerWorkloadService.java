@@ -40,6 +40,25 @@ public class TrainerWorkloadService {
         return trainerWorkloadRepository.save(trainerWorkload);
     }
 
+    // Method to update a TrainerWorkload by username (if you need custom behavior, this can be adjusted)
+    public TrainerWorkload updateTrainerWorkloadByUsername(String username, TrainerWorkload updatedWorkload) {
+        Optional<TrainerWorkload> existingWorkloadOpt = getTrainerWorkloadByUsername(username);
+        if (existingWorkloadOpt.isPresent()) {
+            TrainerWorkload existingWorkload = existingWorkloadOpt.get();
+            // Update the existingWorkload with the values from updatedWorkload
+            existingWorkload.setId(updatedWorkload.getId());
+            existingWorkload.setTrainerUsername(updatedWorkload.getTrainerUsername());
+            existingWorkload.setTrainerStatus(updatedWorkload.isTrainerStatus());
+            existingWorkload.setYears(updatedWorkload.getYears());
+            existingWorkload.setTrainerLastName(updatedWorkload.getTrainerLastName());
+            existingWorkload.setTrainerFirstName(updatedWorkload.getTrainerFirstName());
+
+            return saveTrainerWorkload(existingWorkload);
+        } else {
+            throw new RuntimeException("TrainerWorkload not found for username: " + username);
+        }
+    }
+
     /**
      * Retrieves all TrainerWorkload entities.
      *
@@ -56,7 +75,7 @@ public class TrainerWorkloadService {
      * @param id the ID of the TrainerWorkload entity
      * @return an Optional containing the TrainerWorkload entity if found
      */
-    public Optional<TrainerWorkload> getTrainerWorkloadById(long id) {
+    public Optional<TrainerWorkload> getTrainerWorkloadById(String id) {
         logger.info("Retrieving TrainerWorkload by ID: {}", id);
         return trainerWorkloadRepository.findById(id);
     }
@@ -66,7 +85,7 @@ public class TrainerWorkloadService {
      *
      * @param id the ID of the TrainerWorkload entity to delete
      */
-    public void deleteTrainerWorkload(long id) {
+    public void deleteTrainerWorkload(String id) {
         logger.info("Deleting TrainerWorkload by ID: {}", id);
         trainerWorkloadRepository.deleteById(id);
     }

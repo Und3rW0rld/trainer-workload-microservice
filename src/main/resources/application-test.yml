@@ -1,0 +1,12 @@
+# src/test/resources/application-test.yml
+spring:
+    config:
+      activate:
+          on-profile: test
+    data:
+        mongodb:
+            uri: mongodb://localhost:27017/trainer_workload_test  # Conexión a la base de datos de test
+    # Otras configuraciones específicas para el perfil de test
+    logging:
+        level:
+            org.springframework.data.mongodb.core: DEBUG  # Para ver la interacción con MongoDB

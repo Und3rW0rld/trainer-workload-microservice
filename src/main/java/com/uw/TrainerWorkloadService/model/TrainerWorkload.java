@@ -1,10 +1,12 @@
 package com.uw.TrainerWorkloadService.model;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,18 +15,20 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
+@Document(collection = "trainerWorkload")
 public class TrainerWorkload {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private String id;
+
+    @Indexed
     private String trainerUsername;
+    @Indexed
     private String trainerFirstName;
+    @Indexed
     private String trainerLastName;
     private boolean trainerStatus;
 
-    @OneToMany (cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, targetEntity = YearSummary.class)
     private List<YearSummary> years = new ArrayList<>();
-
 
 }

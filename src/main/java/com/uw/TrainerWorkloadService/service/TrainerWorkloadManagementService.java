@@ -4,6 +4,7 @@ import com.uw.TrainerWorkloadService.dto.TrainingRequest;
 import com.uw.TrainerWorkloadService.model.Month;
 import com.uw.TrainerWorkloadService.model.TrainerWorkload;
 import com.uw.TrainerWorkloadService.model.YearSummary;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,8 +79,28 @@ public class TrainerWorkloadManagementService {
        */
       public String addTraining(TrainingRequest trainingRequest) {
             logger.info("Adding training for trainer: {}, trainingRequest: {}", trainingRequest.getTrainerUsername(), trainingRequest);
+
+            //Validations
+
+            if (trainingRequest.getTrainerUsername() == null) {
+                  logger.error("Invalid trainer username: {}", (Object) null);
+                  throw new IllegalArgumentException("Trainer username must not be null");
+            }
+
+            if (trainingRequest.getTrainingDate() == null) {
+                  logger.error("Invalid training date: {}", (Object) null);
+                  throw new IllegalArgumentException("Training date must not be null");
+            }
+
+            if (trainingRequest.getTrainingDuration() <= 0) {
+                  logger.error("Invalid training duration: {}", trainingRequest.getTrainingDuration());
+                  throw new IllegalArgumentException("Training duration must be greater than 0");
+            }
+
+            int month = trainingRequest.getTrainingDate().getMonthValue();
+
             TrainerWorkload trainerWorkload = getOrCreateTrainerWorkload(trainingRequest.getTrainerUsername(), trainingRequest.getFirstName(), trainingRequest.getLastName(), trainingRequest.isActive());
-            Month monthEnum = Month.fromNumber(trainingRequest.getTrainingDate().getMonthValue());
+            Month monthEnum = Month.fromNumber(month);
 
             for (YearSummary y : trainerWorkload.getYears()) {
                   if (y.getYear() == trainingRequest.getTrainingDate().getYear()) {
@@ -98,6 +119,7 @@ public class TrainerWorkloadManagementService {
             logger.info("Training workload added successfully for trainer: {}", trainingRequest.getTrainerUsername());
             return "Training workload added successfully";
       }
+
 
       /**
        * Deletes training hours from a trainer's workload.
@@ -218,7 +240,7 @@ public class TrainerWorkloadManagementService {
        * @param trainingRequest the training request data transfer object
        * @return a response entity containing a message indicating the result of the operation
        */
-      public ResponseEntity<String> processRequest(TrainingRequest trainingRequest) {
+      public ResponseEntity<String> processRequest(@Valid TrainingRequest trainingRequest) {
             logger.info("Processing training request for trainer: {}, actionType: {}", trainingRequest.getTrainerUsername(), trainingRequest.getActionType());
             try {
                   // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService

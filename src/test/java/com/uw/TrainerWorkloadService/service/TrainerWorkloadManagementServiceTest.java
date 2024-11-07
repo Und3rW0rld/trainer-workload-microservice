@@ -8,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +18,6 @@ import static org.mockito.Mockito.*;
  * Unit tests for the TrainerWorkloadManagementService class.
  */
 @ExtendWith(MockitoExtension.class)
-@Transactional
 public class TrainerWorkloadManagementServiceTest {
 
       @Mock
