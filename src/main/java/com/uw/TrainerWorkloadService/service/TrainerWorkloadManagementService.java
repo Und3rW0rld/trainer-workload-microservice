@@ -138,6 +138,8 @@ public class TrainerWorkloadManagementService {
                     .orElseThrow(() -> new IllegalArgumentException("Training not found"));
             Month monthEnum = Month.fromNumber(month);
 
+            System.out.println("trainerWorkload: " + trainerWorkload);
+
             for (YearSummary y : trainerWorkload.getYears()) {
                   if (y.getYear() == year) {
                         y.deleteHours(monthEnum, duration);
@@ -242,6 +244,10 @@ public class TrainerWorkloadManagementService {
        */
       public ResponseEntity<String> processRequest(@Valid TrainingRequest trainingRequest) {
             logger.info("Processing training request for trainer: {}, actionType: {}", trainingRequest.getTrainerUsername(), trainingRequest.getActionType());
+            if( trainingRequest.getTrainerUsername() == null || trainingRequest.getTrainerUsername().isBlank() ) {
+                  logger.error("Invalid trainer username: ");
+                  return ResponseEntity.badRequest().body("{\"message\": \"Trainer username must not be blank\"}");
+            }
             try {
                   // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService
                   String message;
