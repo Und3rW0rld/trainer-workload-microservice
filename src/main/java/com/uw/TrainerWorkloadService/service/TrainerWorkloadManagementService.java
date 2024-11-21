@@ -248,6 +248,9 @@ public class TrainerWorkloadManagementService {
                   logger.error("Invalid trainer username: ");
                   return ResponseEntity.badRequest().body("{\"message\": \"Trainer username must not be blank\"}");
             }
+            if ( trainingRequest.getTrainingDuration() < 0 ){
+                  throw new IllegalArgumentException("Invalid training duration: training duration must be greater than 0");
+            }
             try {
                   // Validate the action type and call the appropriate method in the TrainerWorkloadManagementService
                   String message;

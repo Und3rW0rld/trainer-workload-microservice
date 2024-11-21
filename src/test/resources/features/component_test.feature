@@ -14,3 +14,16 @@ Feature: Trainer Workload Service Component Test
     Given an existing trainer workload for trainer with username "Pedro"
     When a remove hours request is processed
     Then the trainer workload should be updated in the database
+
+
+  Scenario: Do not add hours to trainer workload if request data is invalid
+    Given an existing trainer workload for trainer with username "Pedro"
+    When an add hours request with invalid data is processed
+    Then the trainer workload should not be updated in the database
+
+
+  Scenario: Handle invalid request data for workload update
+    Given an invalid training request with missing or incorrect fields
+    When the bad request is processed
+    Then the system should return an error response
+    And an error message should indicate the reason for the invalid request
